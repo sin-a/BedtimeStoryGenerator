@@ -28,7 +28,8 @@ class ExperimentZero:
         for topic in Topic:
             for _ in range(n):
                 story = self.generate_story(topic)
-                zeroshot_df = zeroshot_df.append({"Topic": topic.value, "Story": story}, ignore_index=True)
+                new_story_df = pd.DataFrame({"Topic": [topic.value], "Story": [story]})
+                zeroshot_df = pd.concat([zeroshot_df, new_story_df], ignore_index=True)
 
         return zeroshot_df
     

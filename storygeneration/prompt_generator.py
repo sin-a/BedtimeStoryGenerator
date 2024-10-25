@@ -267,23 +267,7 @@ class PromptGenerator:
         prompt = (
             f"Here are examples of stories for children:\n\n"
             f"{example_stories}"
-            f"Write another story in the same style, including {keyword}. Do not presume any prior knowledge. It should have a title and end with \"The End.\"\n"
+            f"Write another story in the same style and include {keyword}. The story must have a title, introduce the places and characters, and end with \"The End.\"\n"
         )
         return prompt
-    
-if __name__ == "__main__":
-    # Create the StoryManager instance
-    manager = StoryManager()
-
-    # Get the DataFrame for use in other parts of the application
-    df = manager.get_dataframe()
-
-    # Create a PromptGenerator instance for the "Magic and Fairy Tales" topic
-    generator = PromptGenerator(df, Topic.ANI)
-
-    # Generate a prompt for the "Magic and Fairy Tales" topic
-    prompt = generator.generate_prompt()
-
-    print(f"Generated Prompt:\n{prompt}")
-
 
