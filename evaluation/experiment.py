@@ -41,15 +41,15 @@ class ExperimentManager:
         print(f"Stories saved to {csv_path}")
 
 if __name__ == "__main__":
-
-    llm_manager = LLMManager()
+    modelname = 'llama3.1'
+    llm_manager = LLMManager(modelname)
     experiment_manager = ExperimentManager()
 
-    experiment_manager.run_experiment(10, "stories_zero.csv")
-    experiment_manager.run_experiment(10, "stories_keyword.csv", 0, 1)
-    experiment_manager.run_experiment(10, "stories_one_shot.csv", 1, 0)
-    experiment_manager.run_experiment(10, "stories_two_shot.csv", 2, 0)
-    experiment_manager.run_experiment(10, "stories_two_shot_keyword.csv", 2, 1)
+    experiment_manager.run_experiment(10, f"{modelname}_stories_zero_shot.csv")
+    experiment_manager.run_experiment(10, f"{modelname}_stories_keyword.csv", 0, 1)
+    experiment_manager.run_experiment(10, f"{modelname}_stories_one_shot.csv", 1, 0)
+    experiment_manager.run_experiment(10, f"{modelname}_stories_two_shot.csv", 2, 0)
+    experiment_manager.run_experiment(10, f"{modelname}_stories_two_shot_keyword.csv", 2, 1)
 
 
 

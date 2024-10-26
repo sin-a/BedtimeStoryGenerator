@@ -261,9 +261,9 @@ class PromptGenerator:
         keywords = self._sample_keywords(topic, n_keywords)
         keyword_str = " and ".join(keywords)
         if topic == Topic.ANY:
-            prompt = f"Write a story for children. Include {keyword_str}.\n"
+            prompt = f"Write a story for children. Include {keyword_str}. Give the story a title and end with \"The End.\"\n"
         else:
-            prompt = f"Write a story for children about {topic.value}. Include {keyword_str}.\n"
+            prompt = f"Write a story for children about {topic.value}. Include {keyword_str}. Give the story a title and end with \"The End.\"\n"
         return prompt
 
     def _generate_prompt_from_examples(self, topic: Topic, n_examples) -> str:
@@ -288,8 +288,8 @@ class PromptGenerator:
     def _generate_prompt_from_examples_and_keywords(self, topic: Topic, n_examples, n_keywords) -> str:
         """Generate a prompt using examples and keywords."""
         # Sample stories and keywords
-        samples = self.sample_stories(topic, n_examples)
-        keywords = self.sample_keywords(topic, n_keywords)
+        samples = self._sample_stories(topic, n_examples)
+        keywords = self._sample_keywords(topic, n_keywords)
 
         # Build the prompt
         example_stories = ""
