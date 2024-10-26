@@ -19,26 +19,26 @@ class StoryManager:
         # Ensure the base path is relative to the current file (manager.py)
         base_path = os.path.dirname(__file__)
 
-        # If no story folder is provided, use the default 'stories/' folder
+        # If no story folder is provided, use the default 'goldstories/' folder
         if story_folder is None:
-            self.story_folder = os.path.join(base_path, 'stories/')
+            self.story_folder = os.path.join(base_path, 'goldstories/')
         else:
             self.story_folder = story_folder
 
-        # If no CSV file path is provided, use 'stories.csv' by default
+        # If no CSV file path is provided, use 'goldstories.csv' by default
         if csv_file is None:
-            self.csv_file = os.path.join(base_path, 'stories.csv')
+            self.csv_file = os.path.join(base_path, 'goldstories.csv')
         else:
             self.csv_file = csv_file
 
         # Load the DataFrame from the CSV file if it exists, otherwise create it
         if os.path.exists(self.csv_file):
-            self.df = self.load_from_csv()
+            self.df = self._load_from_csv()
         else:
-            self.df = self.load_stories_into_dataframe()
-            self.save_to_csv()
+            self.df = self._load_stories_into_dataframe()
+            self._save_to_csv()
 
-    def load_from_csv(self) -> pd.DataFrame:
+    def _load_from_csv(self) -> pd.DataFrame:
         """Load the DataFrame from a CSV file and convert topics back to lists."""
         print(f"Loading stories from {self.csv_file}")
         df = pd.read_csv(self.csv_file)
@@ -47,7 +47,7 @@ class StoryManager:
         df["Topics"] = df["Topics"].apply(lambda x: x.split(", "))
         return df
 
-    def save_to_csv(self):
+    def _save_to_csv(self):
         """Save the DataFrame to a CSV file."""
         print(f"Saving stories to {self.csv_file}")
 
@@ -55,18 +55,7 @@ class StoryManager:
         self.df["Topics"] = self.df["Topics"].apply(lambda x: ", ".join(x))
         self.df.to_csv(self.csv_file, index=False)
 
-    def load_stories_into_dataframe(self) -> pd.DataFrame:
-        """Load stories from text files and build a DataFrame."""
-        stories = []
-        for filename in os.listdir(self.story_folder):
-            if filename.endswith(".txt"):
-                with open(os.path.join(self.story_folder, filename), "r", encoding="utf-8") as f:
-                    content = f.read()
-                    story = self.parse_story(content)
-                    stories.append(story)
-        return pd.DataFrame(stories)
-
-    def parse_story(self, content: str) -> dict:
+    def _parse_story(self, content: str) -> dict:
         """Parse the content of a story file."""
         lines = content.splitlines()
         # First line is the title
@@ -77,6 +66,17 @@ class StoryManager:
         topics = [self.TOPIC_MAP[code] for code in topic_codes]
         body = "\n".join(lines[2:])
         return {"Title": title, "Topics": topics, "Story": body}
+    
+    def _load_stories_into_dataframe(self) -> pd.DataFrame:
+        """Load stories from text files and build a DataFrame."""
+        stories = []
+        for filename in os.listdir(self.story_folder):
+            if filename.endswith(".txt"):
+                with open(os.path.join(self.story_folder, filename), "r", encoding="utf-8") as f:
+                    content = f.read()
+                    story = self._parse_story(content)
+                    stories.append(story)
+        return pd.DataFrame(stories)
 
     def get_dataframe(self) -> pd.DataFrame:
         """Return the current DataFrame."""

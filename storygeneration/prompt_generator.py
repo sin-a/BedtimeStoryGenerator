@@ -1,7 +1,8 @@
 import pandas as pd
 import random
 from enum import Enum
-from goldstories.manager import StoryManager
+from goldstories.goldstories_manager import StoryManager
+from typing import Optional
 
 
 class Topic(Enum):
@@ -168,7 +169,7 @@ keywords = {
         "a jeweled bracelet with hidden powers", "a dragon's tooth", 
         "a unicorn horn", "a fireproof shield", "a shimmering ring of truth",
     ],
-        Topic.FAM: [
+    Topic.FAM: [
         # Characters
         "a hepful mom", "a loving dad", "a funny grandma", "a kind grandpa", 
         "a playful little brother", "a curious big sister", "a noisy neighbor", 
@@ -188,13 +189,13 @@ keywords = {
         "a busy grocery store", "a friendly neighbor's house", "a fun playground", 
         "a bustling school", "a peaceful garden", "a busy city street", 
         "a small doctor's office", "a local park", "a bright classroom", 
-        "a cheerful library", "a bustling market", "a quiet park bench", 
-        "a colorful craft room", "a cozy treehouse", "a family car", 
-        "a quiet sidewalk", "a big shopping mall", "a warm bakery", 
-        "a quiet hospital room", "a fun daycare", "a small post office", 
+        "a library", "a bustling market", "a quiet park bench", 
+        "a colorful craft room", "a cozy treehouse", "a family car", "a train"
+        "a sidewalk", "a shopping mall", "a nice bakery", 
+        "a small post office", "a train station", "a busy school bus",
         "a sandy beach", "a crowded bus stop", "a friendly coffee shop", 
-        "a quiet museum", "a noisy school hallway", "a sunny front porch", 
-        "a grassy backyard", "a bright doctor's waiting room", "a warm kitchen table", 
+        "a quiet museum", "a sunny front porch", 
+        "a grassy backyard", "a bright doctor's waiting room",
 
         # Objects
         "a favorite toy", "a warm blanket", "a storybook", 
@@ -219,41 +220,55 @@ keywords = {
 
 
 class PromptGenerator:
-    """A class to generate prompts for fewshot learning using stories from a DataFrame."""
+    """A class to generate prompts based on a topic and number of examples and keywords."""
 
-    def __init__(self, df: pd.DataFrame, topic: Topic):
-        if not isinstance(topic, Topic):
-            raise ValueError(f"Invalid topic: {topic}. Must be one of {list(Topic)}.")
-        self.df = df
-        self.topic = topic
+    def __init__(self):
+        self.df = StoryManager().get_dataframe()
 
-    def sample_keyword(self) -> str:
+    def _sample_keywords(self, topic: Topic, n: int) -> list:
         """Sample a keyword for the given topic."""
-        if self.topic == Topic.ANY:
+        if topic == Topic.ANY:
             # Randomly pick any topic from the `keywords` dictionary
             random_topic = random.choice(list(keywords.keys()))
             topic_keywords = keywords[random_topic]
         else:
-            topic_keywords = keywords.get(self.topic, [])
+            topic_keywords = keywords[topic]
         
         # Return keyword
-        return random.sample(topic_keywords, 1)[0]
+        return random.sample(topic_keywords, n)
 
-    def sample_stories(self, n) -> pd.DataFrame:
+    def _sample_stories(self, topic: Topic, n: int) -> pd.DataFrame:
         """Sample up to `n` stories matching the given topic."""
-        if self.topic == Topic.ANY:
+        if topic == Topic.ANY:
             stories = self.df
         else:
-            topic_value = self.topic.value
-            stories = self.df[self.df["Topics"].apply(lambda x: topic_value in x)]
+            stories = self.df[self.df["Topics"].apply(lambda x: topic.value in x)]
 
         n = min(n, len(stories))
         return stories.sample(n)
+    
+    def _generate_zeroshot_prompt(self, topic: Topic) -> str:
+        if topic == Topic.ANY:
+            prompt = "Write a story for children. Give the story a title and end with \"The End.\”\n" 
+        else:
+            prompt = f"Write a story for children about {topic.value}. Give the story a title and end with \"The End.\”\n"
+        
+        return prompt
+    
+    def _generate_prompt_from_keywords(self, topic: Topic, n_keywords) -> str:
+        """Generate a prompt using the given keywords."""
+        # Build the prompt
+        keywords = self._sample_keywords(topic, n_keywords)
+        keyword_str = " and ".join(keywords)
+        if topic == Topic.ANY:
+            prompt = f"Write a story for children. Include {keyword_str}.\n"
+        else:
+            prompt = f"Write a story for children about {topic.value}. Include {keyword_str}.\n"
+        return prompt
 
-    def generate_prompt(self, n=2) -> str:
+    def _generate_prompt_from_examples(self, topic: Topic, n_examples) -> str:
         """Generate a n-shot learning prompt for the given topic."""
-        samples = self.sample_stories(n)
-        keyword = self.sample_keyword()
+        samples = self._sample_stories(topic, n_examples)
 
         # Build the prompt
         example_stories = ""
@@ -262,12 +277,46 @@ class PromptGenerator:
                 f"Title: {row['Title']}\n"
                 f"Story: {row['Story']}\n\n"
             )
-
         # Instruction + examples + query
         prompt = (
             f"Here are examples of stories for children:\n\n"
             f"{example_stories}"
-            f"Write another story in the same style and include {keyword}. The story must have a title, introduce the places and characters, and end with \"The End.\"\n"
+            f"Write another story in the same style. Give the story a title and end with \"The End.\"\n"
         )
         return prompt
+    
+    def _generate_prompt_from_examples_and_keywords(self, topic: Topic, n_examples, n_keywords) -> str:
+        """Generate a prompt using examples and keywords."""
+        # Sample stories and keywords
+        samples = self.sample_stories(topic, n_examples)
+        keywords = self.sample_keywords(topic, n_keywords)
 
+        # Build the prompt
+        example_stories = ""
+        for _, row in samples.iterrows():
+            example_stories += (
+                f"Title: {row['Title']}\n"
+                f"Story: {row['Story']}\n\n"
+            )
+        keyword_str = " and ".join(keywords)
+        prompt = (
+                f"Here are examples of stories for children:\n\n"
+                f"{example_stories}"
+                f"Write another story in the same style. Include {keyword_str}. Give the story a title and end with \"The End.\"\n"
+            )
+        return prompt
+        
+    def generate_prompt(self, topic: Topic, n_examples: int = 0, n_keywords: int = 0) -> str:
+        if not isinstance(topic, Topic):
+            raise ValueError(f"Invalid topic: {topic}. Must be one of {list(Topic)}.")
+        if n_examples < 0 or n_keywords < 0:
+            raise ValueError("Number of examples and keywords must be non-negative.")
+        if n_examples == 0 and n_keywords == 0:
+            return self._generate_zeroshot_prompt(topic)
+        elif n_examples > 0 and n_keywords == 0:
+            return self._generate_prompt_from_examples(topic, n_examples)
+        elif n_examples == 0 and n_keywords > 0:
+            return self._generate_prompt_from_keywords(topic, n_keywords)
+        else:
+            return self._generate_prompt_from_examples_and_keywords(topic, n_examples, n_keywords)
+   
