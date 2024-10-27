@@ -19,9 +19,9 @@ class StoryManager:
         # Ensure the base path is relative to the current file (manager.py)
         base_path = os.path.dirname(__file__)
 
-        # If no story folder is provided, use the default 'goldstories/' folder
+        # If no story folder is provided, use the default 'stories/' folder
         if story_folder is None:
-            self.story_folder = os.path.join(base_path, 'goldstories/')
+            self.story_folder = os.path.join(base_path, 'stories/')
         else:
             self.story_folder = story_folder
 

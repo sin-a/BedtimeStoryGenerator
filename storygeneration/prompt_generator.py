@@ -278,11 +278,18 @@ class PromptGenerator:
                 f"Story: {row['Story']}\n\n"
             )
         # Instruction + examples + query
-        prompt = (
-            f"Here are examples of stories for children:\n\n"
-            f"{example_stories}"
-            f"Write another story in the same style. Give the story a title and end with \"The End.\"\n"
-        )
+        if n_examples == 1:
+            prompt = (
+                f"Here is an example of a story for children:\n\n"
+                f"{example_stories}"
+                f"Write another story in the same style. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
+            )
+        else:
+            prompt = (
+                f"Here are examples of stories for children:\n\n"
+                f"{example_stories}"
+                f"Write another story in the same style. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
+            )
         return prompt
     
     def _generate_prompt_from_examples_and_keywords(self, topic: Topic, n_examples, n_keywords) -> str:
@@ -299,10 +306,17 @@ class PromptGenerator:
                 f"Story: {row['Story']}\n\n"
             )
         keyword_str = " and ".join(keywords)
-        prompt = (
+        if n_examples == 1:
+            prompt = (
+                f"Here is an example of a story for children:\n\n"
+                f"{example_stories}"
+                f"Write another story in the same style. Include {keyword_str}. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
+            )
+        else:
+            prompt = (
                 f"Here are examples of stories for children:\n\n"
                 f"{example_stories}"
-                f"Write another story in the same style. Include {keyword_str}. Give the story a title and end with \"The End.\"\n"
+                f"Write another story in the same style. Include {keyword_str}. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
             )
         return prompt
         
