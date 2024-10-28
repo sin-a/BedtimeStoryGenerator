@@ -19,21 +19,37 @@ def clean_title(title):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    topics = [(t.name, t.value) for t in Topic]
+    topics = [(t.name, t.value) for t in Topic]  # List of topic names and values
+    selected_option = None  # Default to None if no selection
 
     if request.method == 'POST':
-        selected_option = request.form.get('dropdown')
-        topic_enum = Topic[selected_option]
-        response = main(topic_enum, 1, 0)
+        selected_option = request.form.get('dropdown')  # Get the selected option
 
-        # Process the response: first line is title, remaining text is story
+        # Ensure the selected option matches a valid enum value
+        try:
+            topic_enum = Topic[selected_option]
+        except KeyError:
+            return render_template(
+                'index.html', topics=topics, selected_option=None, error="Invalid topic selected."
+            )
+
+        response = main(topic_enum, 1, 0)  # Generate the story
+
+        # Process the response: first line is title, remaining lines are the story
         title, *story = response.split('\n')
         cleaned_title = clean_title(title)
         story_text = clean_text('\n'.join(story))
 
-        return render_template('index.html', topics=topics, title=cleaned_title, story=story_text)
+        return render_template(
+            'index.html', 
+            topics=topics, 
+            selected_option=selected_option,  # Pass the selected option to the template
+            title=cleaned_title, 
+            story=story_text
+        )
 
-    return render_template('index.html', topics=topics)
+    # Render the form initially without a story
+    return render_template('index.html', topics=topics, selected_option=selected_option)
 
 if __name__ == '__main__':
     app.run(debug=False)

@@ -106,7 +106,10 @@
             <label for="dropdown">Select a topic:</label>
             <select id="dropdown" name="dropdown">
                 {% for topic in topics %}
-                    <option value="{{ topic[0] }}">{{ topic[1] }}</option>
+                    <option value="{{ topic[0] }}" 
+                            {% if selected_option == topic[0] %} selected {% endif %}>
+                        {{ topic[1] }}
+                    </option>
                 {% endfor %}
             </select>
             <button type="submit" id="goButton">Go</button>
