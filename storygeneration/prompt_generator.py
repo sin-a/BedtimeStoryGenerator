@@ -249,11 +249,33 @@ class PromptGenerator:
     
     def _generate_zeroshot_prompt(self, topic: Topic) -> str:
         if topic == Topic.ANY:
-            prompt = "Write a story for children. Give the story a title and end with \"The End.\”\n" 
+            prompt = "Write a story for children. Use simple words and keep the story easy to understand. Give the story a title and end with \"The End.\”\n" 
         else:
-            prompt = f"Write a story for children about {topic.value}. Give the story a title and end with \"The End.\”\n"
+            prompt = f"Write a story for children about {topic.value}. Use simple words and keep the story easy to understand. Give the story a title and end with \"The End.\”\n"
         
         return prompt
+    
+    def _build_intro_examples_str(self, topic: Topic, n_examples) -> str:
+        # Sample stories and keywords
+        samples = self._sample_stories(topic, n_examples)
+
+        # Build the prompt
+        example_stories = ""
+        for _, row in samples.iterrows():
+            example_stories += (
+                f"Title: {row['Title']}\n"
+                f"Story: {row['Story']}\n\n"
+            )
+
+        intro = (
+            "Here is an example of a story for children:\n\n"
+            if n_examples == 1
+            else f"Here are {n_examples} examples of stories for children:\n\n"
+            )
+        
+        return(f"{intro}"
+               f"{example_stories}")
+
     
     def _generate_prompt_from_keywords(self, topic: Topic, n_keywords) -> str:
         """Generate a prompt using the given keywords."""
@@ -261,63 +283,32 @@ class PromptGenerator:
         keywords = self._sample_keywords(topic, n_keywords)
         keyword_str = " and ".join(keywords)
         if topic == Topic.ANY:
-            prompt = f"Write a story for children. Include {keyword_str}. Give the story a title and end with \"The End.\"\n"
+            prompt = f"Write a story for children. Include {keyword_str}. Use simple words and keep the story easy to understand. Give the story a title and end with \"The End.\"\n"
         else:
-            prompt = f"Write a story for children about {topic.value}. Include {keyword_str}. Give the story a title and end with \"The End.\"\n"
+            prompt = f"Write a story for children about {topic.value}. Try to include {keyword_str}. Use simple words and keep the story easy to understand. Give the story a title and end with \"The End.\"\n"
         return prompt
 
     def _generate_prompt_from_examples(self, topic: Topic, n_examples) -> str:
         """Generate a n-shot learning prompt for the given topic."""
-        samples = self._sample_stories(topic, n_examples)
 
-        # Build the prompt
-        example_stories = ""
-        for _, row in samples.iterrows():
-            example_stories += (
-                f"Title: {row['Title']}\n"
-                f"Story: {row['Story']}\n\n"
-            )
         # Instruction + examples + query
-        if n_examples == 1:
-            prompt = (
-                f"Here is an example of a story for children:\n\n"
-                f"{example_stories}"
-                f"Write another story in the same style. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
-            )
-        else:
-            prompt = (
-                f"Here are examples of stories for children:\n\n"
-                f"{example_stories}"
-                f"Write another story in the same style. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
-            )
+        prompt = (
+            f"{self._build_intro_examples_str(topic, n_examples)}"
+            f"Write another story in the same style. Use simple words and keep the story easy to understand. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
+        )
+
         return prompt
     
     def _generate_prompt_from_examples_and_keywords(self, topic: Topic, n_examples, n_keywords) -> str:
         """Generate a prompt using examples and keywords."""
-        # Sample stories and keywords
-        samples = self._sample_stories(topic, n_examples)
+        
         keywords = self._sample_keywords(topic, n_keywords)
-
-        # Build the prompt
-        example_stories = ""
-        for _, row in samples.iterrows():
-            example_stories += (
-                f"Title: {row['Title']}\n"
-                f"Story: {row['Story']}\n\n"
-            )
         keyword_str = " and ".join(keywords)
-        if n_examples == 1:
-            prompt = (
-                f"Here is an example of a story for children:\n\n"
-                f"{example_stories}"
-                f"Write another story in the same style. Include {keyword_str}. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
-            )
-        else:
-            prompt = (
-                f"Here are examples of stories for children:\n\n"
-                f"{example_stories}"
-                f"Write another story in the same style. Include {keyword_str}. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
-            )
+        
+        prompt = (
+            f"{self._build_intro_examples_str(topic, n_examples)}"
+            f"Write another story in the same style. Try to include {keyword_str}. Use simple words and keep the story easy to understand. Give the story a title, introduce the setting and characters and end with \"The End.\"\n"
+        )
         return prompt
         
     def generate_prompt(self, topic: Topic, n_examples: int = 0, n_keywords: int = 0) -> str:
