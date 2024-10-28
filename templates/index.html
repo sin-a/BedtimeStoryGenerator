@@ -4,33 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Story Generator</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        /* Set a background image for the whole page */
         body {
-            background-image: url('/static/background.webp'); /* use file as background, url would work too */
+            background-image: url('/static/background.webp');
             background-size: cover;
             background-position: center;
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             height: 100vh;
         }
 
-        /* Centering and styling the container box */
         .container {
-            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+            background-color: rgba(255, 255, 255, 0.8);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             text-align: center;
             width: 300px;
+            margin-top: 20px;
+            position: relative; /* Enables absolute centering for spinner */
         }
 
-        /* Adjust dropdown and button styles */
         select, button {
             width: 100%;
             padding: 10px;
@@ -47,46 +45,81 @@
             border: none;
         }
 
-        button:hover {
-            background-color: #0056b3;
+        button:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
         }
 
-        /* Result text styling */
+        .spinner {
+            display: none;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+                
+            /* Absolute positioning and centering */
+            position: fixed; /* Use fixed to prevent any offset issues */
+            top: 50%;
+            left: 50%;
+            translate: -50% -50%; /* New 'translate' syntax to center accurately */
+        }
+        
+        /* Keyframes to animate the spinner */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            width: 80%;
+            max-width: 1000px;
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
         #result {
             font-size: 18px;
             color: #333;
-            margin-top: 10px;
+            text-align: left;
+            white-space: pre-wrap;
         }
     </style>
+    <script>
+        function disableButtonAndShowSpinner() {
+            const button = document.getElementById('goButton');
+            const spinner = document.getElementById('spinner');
+            button.disabled = true;
+            spinner.style.display = 'block';
+        }
+    </script>
 </head>
 <body>
+
     <div class="container">
         <h1>Story Generator</h1>
-        <form id="myForm">
+        <form method="POST" action="/" onsubmit="disableButtonAndShowSpinner()">
             <label for="dropdown">Select a topic:</label>
             <select id="dropdown" name="dropdown">
-            	{% for topic in topics %}
-		    <option value="{{ topic[0] }}">{{ topic[1] }}</option>
+                {% for topic in topics %}
+                    <option value="{{ topic[0] }}">{{ topic[1] }}</option>
                 {% endfor %}
-	    </select>
-            <button type="button" id="goButton">Go</button>
+            </select>
+            <button type="submit" id="goButton">Go</button>
         </form>
-        <p id="result"></p>
     </div>
+    <div class="spinner" id="spinner"></div>
 
-    <script>
-        $(document).ready(function(){
-            $('#goButton').click(function(){
-                $.ajax({
-                    type: 'POST',
-                    url: '/process',
-                    data: $('#myForm').serialize(),
-                    success: function(response) {
-                        $('#result').text(response.result);
-                    }
-                });
-            });
-        });
-    </script>
+    {% if title and story %}
+    <div class="result-container">
+        <h2>{{ title }}</h2>
+        <div id="result">{{ story|safe }}</div>
+    </div>
+    {% endif %}
+
 </body>
 </html>
