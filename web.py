@@ -33,7 +33,7 @@ def index():
                 'index.html', topics=topics, selected_option=None, error="Invalid topic selected."
             )
 
-        response = main(topic_enum, 1, 0)  # Generate the story
+        response = main(topic_enum, 2, 0)  # Generate the story
 
         # Process the response: first line is title, remaining lines are the story
         title, *story = response.split('\n')
