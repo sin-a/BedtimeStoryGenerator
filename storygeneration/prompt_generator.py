@@ -58,7 +58,7 @@ keywords = {
         "a wooden staff", "a pair of binoculars", "a glowing gemstone",
         "a colorful kite", "a worn-out book", "a tiny glass jar"
     ],
-    
+
     Topic.ADV: [  # Adventures and Exploration
         # Characters
         "a kind friend", "a brave explorer", "a happy sailor", 
@@ -213,7 +213,7 @@ class PromptGenerator:
         keywords = self._sample_keywords(topic, n_keywords)
         keyword_str = " and ".join(keywords)
         if topic == Topic.ANY:
-            prompt = f"Write a story for children. Include {keyword_str}. Use simple, everyday words that children can easily understand. Give the story a title and end with \"The End.\"\n"
+            prompt = f"Write a story for children. Try to include {keyword_str}. Use simple, everyday words that children can easily understand. Give the story a title and end with \"The End.\"\n"
         else:
             prompt = f"Write a story for children about {topic.value}. Try to include {keyword_str}. Use simple, everyday words that children can easily understand. Give the story a title and end with \"The End.\"\n"
         return prompt
